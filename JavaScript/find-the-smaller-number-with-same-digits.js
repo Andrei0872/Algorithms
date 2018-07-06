@@ -58,6 +58,8 @@ return x;
 }
 
 
+//Expected results
+
 Test.describe("Fixed tests", function() {
 	Test.it("Smaller numbers", function() {
     Test.assertEquals(nextSmaller(21), 12)
