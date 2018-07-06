@@ -16,7 +16,7 @@ function tribonacci($signature, $n) {
   //we must add the sum of the last 3 elements
   for($i=3;$i<=$n-1;$i++) {
 
-  //we add the sum of the last 3
+  //we push the sum of the last 3
   array_push($signature,(float)($signature[$i-1] + $signature[$i-2] + $signature[$i-3]));
 } 
   
