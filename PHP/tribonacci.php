@@ -8,6 +8,7 @@ function tribonacci($signature, $n) {
   //case which $n is less than 3
    if($n < 3) {
 
+    // we get the array that contains $n elements
   return $a = array_slice($signature,0,$n);
   } else {
  
