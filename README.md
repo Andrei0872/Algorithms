@@ -1,5 +1,5 @@
 # Codewars
-Practicing algorithms using JavaScipt/PHP/C++
+Practicing algorithms using JavaScript/PHP/C++
  ---
  
 ### Welcome !
