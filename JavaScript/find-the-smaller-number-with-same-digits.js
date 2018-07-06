@@ -1,4 +1,5 @@
 
+// ! This solution wasn't efficient enough for Codewars, but this is just a solution that works for the specified tasks. Feel free to optimize it!
 
 function nextSmaller(n) {
 
