@@ -53,7 +53,7 @@
 #include <string>
 #include <algorithm> // reverse() 
 
-using namespace std; // so I don't have to type everyime std::
+using namespace std; // so I don't have to type every time std::
 
 
 string fun(const string &str, int size) {
