@@ -60,8 +60,7 @@
     }
 
 
-    $res = listSquared(1,250);
-    print_r($res);
+
 
     // Other examples
 
