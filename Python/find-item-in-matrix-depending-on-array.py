@@ -42,7 +42,7 @@ def create_mat_v2():
 
     # Fill the matrix with elements from user input
     for i in range(len(mat)):
-        mat[i] = [ int(raw_input()) for j in range(m) ]
+        mat[i] = [ int(raw_input()) for j in range(m) ] # Here could be range(n) if we had a matrix of mxn
 
     return mat
 
