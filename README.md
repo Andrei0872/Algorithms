@@ -1,5 +1,5 @@
-# Codewars
-Practicing algorithms using JavaScript/PHP/C++
+
+Practicing algorithms using JavaScript/PHP/C++/Python
  ---
  
 ### Welcome !
