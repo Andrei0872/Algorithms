@@ -1,5 +1,6 @@
 
 
+
 // Adjancency List Representation - array of lists of length V(number of nodes);
 // Every index of the array will be a list that contains elements that are actually adjacent nodes
 
@@ -62,6 +63,7 @@ int main () {
    // Print graph
    printGraph(adj,V);
 
+    return 0;    
     
 
 }
