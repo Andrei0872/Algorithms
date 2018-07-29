@@ -66,7 +66,7 @@ void Graph::BFS(int start) {
         // Check for adjacent nodes for the node with index of "start"
         for(it = adj[start].begin(); it != adj[start].end(); ++it) {
 
-            // If the adjacent nodex has not been visited
+            // If the adjacent node has not been visited
             if(!visited[*it]) {
                 visited[*it] = true;
                 // Add to the queue so we can print it
