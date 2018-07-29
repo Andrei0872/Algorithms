@@ -17,7 +17,7 @@ class Graph {
 
         void addEdge(int v, int w); // Connect 2 nodes
 
-        void BFS(int start); // BFS traversal from a give source 
+        void BFS(int start); // BFS traversal from a given source 
 
 };
 
