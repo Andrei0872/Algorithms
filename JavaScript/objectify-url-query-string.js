@@ -50,7 +50,7 @@ solve("user.name.firstname=Bob&user.name.lastname=Smith&user.favoritecolor=Light
 Expected output : 
 { user: 
    { name: { firstname: 'Bob', lastname: 'Smith' },
-     favoritecolor: 'Light 20Blue' 
+     favoritecolor: 'Light Blue' 
     } 
 }
 */
