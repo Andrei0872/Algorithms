@@ -32,7 +32,7 @@ function solve(query) {
             if(!acc[item]) acc[item] =  {};
             
             // If we are at the last element, then we must assign the value to this last element
-            if(index === arr.length - 1 ) acc[item] = parts[1];
+            if(index === arr.length - 1 ) acc[item] = decodeURIComponent(parts[1]); // Decode an encoded URI 
 
             return acc[item];
         
@@ -50,7 +50,7 @@ solve("user.name.firstname=Bob&user.name.lastname=Smith&user.favoritecolor=Light
 Expected output : 
 { user: 
    { name: { firstname: 'Bob', lastname: 'Smith' },
-     favoritecolor: 'Light%20Blue' 
+     favoritecolor: 'Light 20Blue' 
     } 
 }
 */
