@@ -4,7 +4,7 @@
 
 // Mother vertex -  a vertex from where you can reach all the other vertices
 
-// Quick tip : The Mother vertex is the last vertex from a DFS
+// Quick tip : The Mother vertex is the last finished vertex from in DFS
 
 #include <iostream>
 #include <list>
