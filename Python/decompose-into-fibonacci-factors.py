@@ -26,7 +26,7 @@ def fibRec(n):
 # x -  the given number
 # n - the number that is less or equal than x
 def decompose(x,n):
-    # In order to find n, we need to stop when n gets a value that is less or equal than x
+    # In order to find n, we need to stop when n gets a value that is NOT less or equal than x
     if(getFib(n+1) <=x):
         # We keep on increasing n
         decompose(x,n+1)
