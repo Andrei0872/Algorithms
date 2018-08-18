@@ -6,7 +6,7 @@
 
 
 // The structure of a node
-class Node  {
+class Node {
 
     constructor(data) {
         this.data = data; // The key value
