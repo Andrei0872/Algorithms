@@ -24,7 +24,6 @@ int maxSum(int arr[], int len, int k) {
 
 
     finalSum = sum;
-
     // Get the final sum by adding remaining elements
     // and removing previous elements
     for(int i = k ; i < len; i++) {
