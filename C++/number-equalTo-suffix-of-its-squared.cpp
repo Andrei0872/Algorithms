@@ -32,7 +32,7 @@ bool isValid(int x ) {
     int squared = x * x;
 
     while( x > 0) {
-        // Check their last digits
+        // Check their last digit
         if(x % 10 != squared % 10)
             return false;
         x /= 10;
@@ -81,6 +81,5 @@ int main () {
     cout << getRowIndex(mat,n) << "\n";
 
     return 0;
-
 }
 
