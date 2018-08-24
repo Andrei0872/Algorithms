@@ -1,5 +1,5 @@
 
-Practicing algorithms using JavaScript/PHP/C++/Python
+Practicing algorithms using JavaScript/PHP/C++/Python/Java
  ---
  
 ### Welcome !
