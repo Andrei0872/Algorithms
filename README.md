@@ -1,11 +1,31 @@
 
-Practicing algorithms using JavaScript/PHP/C++/Python/Java
- ---
+## Solving Algorithms and Problems using JavaScript/C++/Python/Java
  
-### Welcome !
++ [Tree](l)
+    * [C++](cpp)
+    * [JavaScript](js)
+    * [Python](oy)
+    * [Java](java)
++ [Graph](l)
+    * [C++](cpp)
+    * [JavaScript](js)
+    * [Python](oy)
+    * [Java](java)
++ [Dynamic Programming](l)
+    * [C++](cpp)
+    * [Python](oy)
+    * [Java](java)
++ [Backtracking](l)
+    * [C++](cpp)
++ [Linked Lists](l)
+    * [C++](cpp)
+    * [JavaScript](js)
++ [Diverse](l)
+    * [C++](cpp)
+    * [JavaScript](js)
+    * [Python](oy)
+    * [Java](java)
 
- Here you can visualize some of the algorithms I enjoyed really much solving. I personally think that practicing algorithm solving really increases your ability to solve **real** problems that you will encounter farther in your projects. I'm not much of an expert __yet__, but I've gone through these kind of situations, even though it's not much since I've started learning web development.
- 
- As a result, feel free to take  a look over these algorithms and I'd be very thankful if you can find and share some improvements.
- 
+
+
  **Happy coding!**
