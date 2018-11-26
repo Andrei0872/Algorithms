@@ -1,39 +1,23 @@
+/// What about this as a solution? 
 
-// Given a set of round brackets, determine if the brackets are balanced
+function balanced(str) {
 
-// (()()(())) - true
-// ())()(() - false
-// ((()())())(( - false
+    /// remove all non brackets first and then remove all occurences of ()
+    let result = str.replace(/[^\(\)]/g, "").replace(/\(\)/g , "")
 
-/*
-Reasoning : {
-    1) We will keep on deleting pairs of brackets : () - and here comes the "do while"
-    2) If the string's length is 0 at the end, it means the brackets are balanced
+    /// if matches is an array that means that match found more
+    /// which means we can call balanced on result again
+    /// if results length is more than 0 then we have a single bracket
+    let d = { matches : result.match(/\(\)+/g) , result }
+
+    /// if matches is null and result.length is 0 then its balanced else not
+    return d.matches !== null ? balanced(result) : d.result.length === 0 ? true : false
 }
-*/
 
-function balanced(s) {
-    // Convert to array so we can use the "splice" function
-    s = s.split('');
-    let n,m;
-    do{
-        // Get the length before doing any deletion
-        n = s.length;
-        for(let i = n-1; i>=0; i--) {
-            // If we find a pair of brackets
-            if(s[i] == '(' && s[i+1] == ')') {
-                // Delete the pair
-                s.splice(i,2);
-            }
-        }
-        // Get the length after deletion
-        m = s.length;
-    }while(m !=n); // Keep repeating until there is nothing to delete 
+console.log(balanced("(() containing text ( () )")) // false
+console.log(balanced("(() ( () )")) // false
+console.log(balanced("(() containing text ( () ))")) // true
 
-    // If the length is 0, is means the brackets are balanced
-    return s.length == 0 ? true:false;
-
-}
 
 console.log(balanced("(()()(()))")) // true
 console.log(balanced("())()(()")) // false
