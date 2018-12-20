@@ -39,3 +39,20 @@ let array = [[1,2,3],
              [7,8,9]]
 
 console.log(snail(array)) // ​​​​​[ 1, 2, 3, 6, 9, 8, 7, 4, 5 ]​​​​​
+
+// =========================================================
+
+// Another solution
+
+const snail = function (array) {
+    const result = [];
+  
+    while(array.length) {
+      result.push(...array.shift());
+      array.forEach(row => result.push(row.pop()));
+      array.reverse().map(row => row.reverse())
+    }
+    
+    return result;
+  }
+  
