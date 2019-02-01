@@ -62,7 +62,7 @@ def solve(N, D, P):
             result.append(index_day)
             index_day += 1
     
-    print(result)
+    return result
 
 
 print(solve(5, 365, 4)) # [1, 1, 1, 2, 2]
