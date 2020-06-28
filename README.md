@@ -1,5 +1,5 @@
 
-## Solving Algorithms and Problems using JavaScript/C++/Python/Java
+## Solving Algorithms and Problems using JavaScript/C++/Python/Java/Go
  
 +  **Trees**
     * [C++](https://github.com/Andrei0872/Algorithms/tree/master/C%2B%2B/Trees)
