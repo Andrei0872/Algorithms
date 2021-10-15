@@ -24,7 +24,6 @@
     * [JavaScript](https://github.com/Andrei0872/Algorithms/tree/master/JavaScript/Diverse)
     * [Python](https://github.com/Andrei0872/Algorithms/tree/master/Python/Diverse)
     * [Java](https://github.com/Andrei0872/Algorithms/tree/master/Java/Diverse)
-
-
+* [GraphSolver](./GraphSolver/main.cpp) - a class that provides the base for multiple graph problems
 
  **Happy coding!**
