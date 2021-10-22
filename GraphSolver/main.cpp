@@ -109,7 +109,7 @@ int* Graph::showMinEdgesRequiredFromSource (int sourceNodeIdx) {
   return pathCosts;
 }
 
-// Problem: https://infoarena.ro/problema/dfs
+// 1) Problem: https://infoarena.ro/problema/dfs
 // Tests: https://infoarena.ro/job_detail/2784008
 void solveNrOfConnectedComponents () {
   fstream in("dfs.in");
@@ -131,7 +131,7 @@ void solveNrOfConnectedComponents () {
   out.close();
 }
 
-// Problem: https://infoarena.ro/problema/bfs
+// 2) Problem: https://infoarena.ro/problema/bfs
 // Tests: https://infoarena.ro/job_detail/2784104
 void solveMinEdgesRequiredFromSource () {
   int N, M, S;
