@@ -4,6 +4,8 @@
 #include <queue>
 #include <vector>
 #include <stack>
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 
@@ -389,11 +391,75 @@ void solveBiconnectedComponents () {
   g.printBiconnectedComponents();
 }
 
+
+// 5) Problem: Havel-Hakimi algorithm
+void solveHavelHakimiProblem () {
+  vector<int> degSequence;
+
+  function<bool()> innerSolve = [&]() {
+    while (true) {
+      sort(degSequence.begin(), degSequence.end());
+
+      int crtNodeDeg = degSequence[0];
+      degSequence.erase(degSequence.begin());
+
+      if (crtNodeDeg == 0) {
+        return true;
+      }
+
+      if (crtNodeDeg > degSequence.size()) {
+        return false;
+      }
+
+      for (int i = 0; i < crtNodeDeg; i++) {
+        if (--degSequence[i] < 0) {
+          return false;
+        }
+      }
+    }
+  };
+
+  // Case 1 - NO
+  degSequence.push_back(4);
+  degSequence.push_back(5);
+  degSequence.push_back(4);
+  degSequence.push_back(4);
+  cout << (innerSolve() ? "YES" : "NO") << '\n';
+  degSequence.clear();
+
+  // Case 2 - YES
+  degSequence.push_back(2);
+  degSequence.push_back(2);
+  degSequence.push_back(2);
+  degSequence.push_back(2);
+  cout << (innerSolve() ? "YES" : "NO") << '\n';
+  degSequence.clear();
+
+  // Case 2 - YES
+  degSequence.push_back(3);
+  degSequence.push_back(3);
+  degSequence.push_back(3);
+  degSequence.push_back(3);
+  cout << (innerSolve() ? "YES" : "NO") << '\n';
+  degSequence.clear();
+
+  degSequence.push_back(3);
+  degSequence.push_back(2);
+  degSequence.push_back(1);
+  degSequence.push_back(0);
+  cout << (innerSolve() ? "YES" : "NO") << '\n';
+  degSequence.clear();
+}
+
+// 7) Topological Sort
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
   // solveCriticalConnections();
-  solveBiconnectedComponents();
+  // solveBiconnectedComponents();
+
+  solveHavelHakimiProblem();
 
   return 0;
 }
