@@ -48,6 +48,7 @@ class Graph {
     
     void DFSforSCC(int);
     void printSCCs();
+    static void printInTopologicalOrder();
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -358,6 +359,57 @@ void Graph::printSCCs () {
   out.close();
 }
 
+void Graph::printInTopologicalOrder () {
+  ifstream in("sortaret.in");
+  int N, M;
+
+  in >> N >> M;
+  list<int> *adjList = new list<int>[N + 1];
+  int* innerDegMap = new int[N + 1];
+
+  // Nodes with inner degree 0.
+  queue<int> independentNodes;
+
+  int x, y;
+  for (int i = 0; i < M; i++) {
+    in >> x >> y;
+
+    adjList[x].push_back(y);
+    innerDegMap[y]++;
+  }
+
+  // for (int i = 1; i <= N; i++) {
+  //   cout << innerDegMap[i] << ' ';
+  // }
+
+  in.close();
+
+  for (int i = 1; i <= N; i++) {
+    if (innerDegMap[i] == 0) {
+      independentNodes.push(i);
+    }
+  }
+
+  ofstream out("sortaret.out");
+  while (!independentNodes.empty()) {
+    int crtNode = independentNodes.front();
+    independentNodes.pop();
+
+    out << crtNode << ' ';
+
+    for (int childNode : adjList[crtNode]) {
+      if (--innerDegMap[childNode] == 0) {
+        independentNodes.push(childNode);
+      }
+    }
+  }
+
+  out.close();
+
+  delete []adjList;
+  delete innerDegMap;
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -556,16 +608,20 @@ void solveHavelHakimiProblem () {
   degSequence.clear();
 }
 
-// 7) Topological Sort
+// 7) Topological Sort: https://infoarena.ro/problema/sortaret
+// Tests: https://infoarena.ro/job_detail/2787569
+void solveTopologicalSort () {
+  Graph::printInTopologicalOrder();
+}
 
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
   // solveCriticalConnections();
   // solveBiconnectedComponents();
-
-  solveStronglyConnectedComponents();
+  // solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
+  solveTopologicalSort();
 
   return 0;
 }
