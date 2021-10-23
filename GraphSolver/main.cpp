@@ -23,9 +23,15 @@ class Graph {
     stack<pair<int, int>> visitedEdges;
     vector<deque<int>> biconnectedComponents;
 
+    bool* isInStack;
+    stack<int> visitedNodes;
+    vector<vector<int>> SCCs;
+
     void DFS(int, int, bool&);
     void buildAdjList(int, vector<vector<int>>&);
     void criticalConnDFS(int, int, vector<vector<int>>&);
+
+    void extractSCCFromStack(int);
 
   public:
     Graph(int);
@@ -39,6 +45,9 @@ class Graph {
 
     void setIsSolvingBiconnected(bool);
     void printBiconnectedComponents();
+    
+    void DFSforSCC(int);
+    void printSCCs();
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -48,6 +57,8 @@ Graph::Graph(int n) : nrNodes(n) {
   // In LeetCode the arrays are 0-based.
   ingressTimestamp = new int[n + 1];
   lowestLevelReached = new int[n + 1];
+
+  isInStack = new bool[n + 1];
 };
 
 Graph::~Graph () {
@@ -55,6 +66,7 @@ Graph::~Graph () {
   delete visited;
   delete ingressTimestamp;
   delete lowestLevelReached;
+  delete isInStack;
 };
 
 void Graph::setUndirected(bool newV) {
@@ -277,6 +289,75 @@ void Graph::printBiconnectedComponents () {
   out.close();
 }
 
+void Graph::DFSforSCC (int crtNodeIdx) {
+  if (visited[crtNodeIdx]) {
+    return;
+  }
+  
+  static int ingressCount = 0;
+
+  visited[crtNodeIdx] = true;
+
+  // At the beggining, both are the same.
+  ingressTimestamp[crtNodeIdx] = lowestLevelReached[crtNodeIdx] = ingressCount++;
+
+  // A node which is part of the stack can belong to a SCC.
+  visitedNodes.push(crtNodeIdx);
+  isInStack[crtNodeIdx] = true;
+
+  for (int childNodeIdx : adjList[crtNodeIdx]) {
+    // In a SCC, all its nodes must be able to reach each other.
+    // To that end, it is expected to encounter cycles and that's why we're traversing
+    // the children first. Considering that each node is given an `ingressTimestamp`,
+    // if a cycle is encountered, the already visited node will have a **smaller** `ingressTimestamp`.
+    // We will form a SCC by grouping having all its constituent the same `ingressTimestamp`.
+    if (!visited[childNodeIdx]) {
+      DFSforSCC(childNodeIdx);
+    }
+
+    // If the child is still in stack it means that it is not yet part
+    // of a different SCC.
+    if (isInStack[childNodeIdx]) {
+      lowestLevelReached[crtNodeIdx] = min(lowestLevelReached[crtNodeIdx], lowestLevelReached[childNodeIdx]);
+    }
+  }
+
+  bool isStartOfSCC = lowestLevelReached[crtNodeIdx] == ingressTimestamp[crtNodeIdx];
+  if (isStartOfSCC) {
+    extractSCCFromStack(crtNodeIdx);
+  }
+}
+
+void Graph::extractSCCFromStack (int startNodeIdx) {
+  vector<int> SCC;
+
+  int stackNodeIdx;
+  do {
+    stackNodeIdx = visitedNodes.top();
+    visitedNodes.pop();
+    isInStack[stackNodeIdx] = false;
+
+    SCC.push_back(stackNodeIdx);
+  } while (stackNodeIdx != startNodeIdx);
+
+  SCCs.push_back(SCC);
+}
+
+void Graph::printSCCs () {
+  ofstream out("ctc.out");
+  
+  out << SCCs.size() << '\n';
+
+  for (auto SCC : SCCs) {
+    for (auto v : SCC) {
+      out << v << ' ';
+    }
+    out << '\n';
+  }
+
+  out.close();
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -391,6 +472,30 @@ void solveBiconnectedComponents () {
   g.printBiconnectedComponents();
 }
 
+// 4) Problem: https://infoarena.ro/problema/ctc
+// Tests: https://infoarena.ro/job_detail/2787477
+void solveStronglyConnectedComponents () {
+  ifstream in("ctc.in");
+  int N, M;
+  
+  in >> N >> M;
+  Graph g(N);
+  g.setUndirected(false);
+
+  int x, y;
+  for (int i = 0; i < M; i++) {
+    in >> x >> y;
+    g.addEdge(x, y);
+  }
+
+  in.close();
+  
+  for (int i = 1; i <= N; i++) {
+    g.DFSforSCC(i);
+  }
+  
+  g.printSCCs();
+}
 
 // 5) Problem: Havel-Hakimi algorithm
 void solveHavelHakimiProblem () {
@@ -459,7 +564,8 @@ int main () {
   // solveCriticalConnections();
   // solveBiconnectedComponents();
 
-  solveHavelHakimiProblem();
+  solveStronglyConnectedComponents();
+  // solveHavelHakimiProblem();
 
   return 0;
 }
