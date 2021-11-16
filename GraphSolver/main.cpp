@@ -9,6 +9,16 @@
 
 using namespace std;
 
+
+typedef pair<int, int> Edge;
+typedef pair<Edge, int> EdgeWithCost;
+
+struct MSPComparator {
+  bool operator() (const EdgeWithCost& e1, const EdgeWithCost& e2) {
+    return e1.second > e2.second;
+  }
+};
+
 class Graph {
   private:
     list<int>* adjList;
@@ -49,6 +59,8 @@ class Graph {
     void DFSforSCC(int);
     void printSCCs();
     static void printInTopologicalOrder();
+
+    pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -410,6 +422,68 @@ void Graph::printInTopologicalOrder () {
   delete innerDegMap;
 }
 
+void populateMSPQueue(
+    const int &parentNodeIdx,
+    priority_queue<EdgeWithCost, vector<EdgeWithCost>, MSPComparator> &edgesWithMinCost,
+    vector<bool> &visited,
+    list<pair<int, int>> *&adjList
+  )
+{
+  for (auto childPair : adjList[parentNodeIdx])
+  {
+    const int& childNodeIdx = childPair.first;
+    const int& cost = childPair.second;
+
+    if (visited[childNodeIdx]) {
+      continue;
+    }
+
+    edgesWithMinCost.push(make_pair(make_pair(parentNodeIdx, childNodeIdx), cost));
+  }
+}
+
+// Using the `Prim`'s algorithm, meaning that we start from an arbitrary node and then
+// we *progressively* build the MSP by choosing the connected edge which has the minimum cost.
+pair<int, vector<Edge>> Graph::getMSPAndTotalCost (list<pair<int, int>>* & adjList, const int& s = 0) {
+  // Keep track of edges and their costs. The edge with the smallest cost will be at the top.
+  priority_queue<EdgeWithCost, vector<EdgeWithCost>, MSPComparator> edgesWithMinCost;
+  vector<bool> visited(nrNodes, false);
+  vector<Edge> result;
+  int totalCost = 0;
+
+  // A tree does not have any cycles, so a graph, in order to not have any cycles
+  // with must have at most `N - 1` edges, where `N` is the number of nodes.
+  const int expectedEdges = nrNodes - 1;
+
+  visited[s] = true;
+  populateMSPQueue(s, edgesWithMinCost, visited, adjList);
+
+  // Don't need to go beyond `result.size() < expectedEdges`.
+  while (!edgesWithMinCost.empty() && result.size() < expectedEdges) {
+    auto edgeWithCost = edgesWithMinCost.top();
+    edgesWithMinCost.pop();
+
+    auto edge = edgeWithCost.first;
+    const int& childNodeIdx = edge.second;
+    // Preventing cycles from occurring.
+    if (visited[childNodeIdx]) {
+      continue;
+    }
+
+    const int& cost = edgeWithCost.second;
+    totalCost += cost;
+
+    // Found an edge with the minimum cost, so we just add it to the MSP.
+    result.push_back(edge);
+
+    // Marking as visited to that cycles are avoided.
+    visited[childNodeIdx] = true;
+    populateMSPQueue(childNodeIdx, edgesWithMinCost, visited, adjList);
+  };
+
+  return make_pair(totalCost, result);
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -614,6 +688,43 @@ void solveTopologicalSort () {
   Graph::printInTopologicalOrder();
 }
 
+// 8) https://infoarena.ro/problema/apm
+// Tests: https://infoarena.ro/job_detail/2801776.
+void solveMSP () {
+  int N, M;
+
+  ifstream in("apm.in");
+  in >> N >> M;
+
+  Graph g(N);
+  list<pair<int, int>>* adjList = new list<pair<int, int>>[N]; 
+  
+  int src, dest, cost;
+  for (int i = 0; i < M; i++) {
+    in >> src >> dest >> cost;
+    src--;
+    dest--;
+
+    adjList[src].push_back(make_pair(dest, cost));
+    // The graph is undirected.
+    adjList[dest].push_back(make_pair(src, cost));
+  }
+
+  auto res = g.getMSPAndTotalCost(adjList);
+
+  ofstream out("apm.out");
+
+  out << res.first << '\n';
+  out << res.second.size() << '\n';
+
+  for (auto edge : res.second) {
+    out << edge.first + 1 << ' ' << edge.second + 1 << '\n';
+  }
+
+  out.close();
+  in.close();
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -621,7 +732,9 @@ int main () {
   // solveBiconnectedComponents();
   // solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
-  solveTopologicalSort();
+  // solveTopologicalSort();
+
+  solveMSP();
 
   return 0;
 }
