@@ -6,16 +6,23 @@
 #include <stack>
 #include <algorithm>
 #include <functional>
+#include <limits.h>
 
 using namespace std;
 
-
 typedef pair<int, int> Edge;
 typedef pair<Edge, int> EdgeWithCost;
+typedef pair<int, int> DestAndCost;
 
 struct MSPComparator {
   bool operator() (const EdgeWithCost& e1, const EdgeWithCost& e2) {
     return e1.second > e2.second;
+  }
+};
+
+struct DijkstraComparator {
+  bool operator () (const DestAndCost& p1, const DestAndCost& p2) {
+    return p1.second > p2.second;
   }
 };
 
@@ -61,6 +68,7 @@ class Graph {
     static void printInTopologicalOrder();
 
     pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
+    vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -484,6 +492,52 @@ pair<int, vector<Edge>> Graph::getMSPAndTotalCost (list<pair<int, int>>* & adjLi
   return make_pair(totalCost, result);
 }
 
+vector<int> Graph::getShortestPathsWithDijkstra(list<pair<int, int>>*& adjList, const int& s = 0) {
+  vector<int> shortestPaths(nrNodes, INT_MAX);
+  vector<bool> visited(nrNodes, false);
+  // (destinationNodeIdx, cost) pairs.
+  priority_queue<DestAndCost, vector<DestAndCost>, DijkstraComparator> destinationsAndCosts;
+
+  shortestPaths[s] = 0;
+  destinationsAndCosts.push(make_pair(s, 0));
+
+  while (!destinationsAndCosts.empty()) {
+    auto p = destinationsAndCosts.top();
+    destinationsAndCosts.pop();
+
+    const int& parentNodeIdx = p.first;
+    const int& parentCost = p.second;
+
+    // A particularity of Dijkstra's algorithm is that the most efficient path
+    // (i.e. the shortest distance) is found **on the first try**. This implies that
+    // if `parentNodeIdx` was extracted from the queue, it means it was extracted
+    // with the most efficient value, so it's enough to check `visited[parentNodeIdx]`
+    // which essentially tells us that a shortest path had already been found for this node.
+    if (visited[parentNodeIdx]) {
+      continue;
+    }
+
+    visited[parentNodeIdx] = true;
+
+    for (auto childAndCost : adjList[parentNodeIdx]) {
+      const int& childNodeIdx = childAndCost.first;
+      const int& childCost = childAndCost.second;
+
+      if (visited[childNodeIdx]) {
+        continue;
+      }
+
+      const int newMinDist = parentCost + childCost;
+      if (newMinDist < shortestPaths[childNodeIdx]) {
+        shortestPaths[childNodeIdx] = newMinDist;
+        destinationsAndCosts.push(make_pair(childNodeIdx, newMinDist));
+      }
+    }
+  };
+
+  return shortestPaths;
+};
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -725,6 +779,41 @@ void solveMSP () {
   in.close();
 }
 
+// 9) https://infoarena.ro/problema/dijkstra
+// Tests: https://infoarena.ro/job_detail/2802010.
+void solveDijkstra () {
+  int N, M;
+  ifstream in("dijkstra.in");
+
+  in >> N >> M;
+  
+  Graph g(N);
+  list<pair<int, int>>* adjList = new list<pair<int, int>>[N];
+
+  g.setUndirected(false);
+
+  int s, d, cost;
+  for (int i = 0; i < M; i++) {
+    in >> s >> d >> cost;
+    s--;
+    d--;
+
+    adjList[s].push_back(make_pair(d, cost));
+  }
+
+  in.close();
+
+  ofstream out("dijkstra.out");
+
+  auto result = g.getShortestPathsWithDijkstra(adjList);
+  for (auto it = result.begin() + 1; it != result.end(); it++) {
+    int dist = *it != INT_MAX ? *it : 0;
+    out << dist << ' ';
+  }
+
+  out.close();
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -734,7 +823,8 @@ int main () {
   // solveHavelHakimiProblem();
   // solveTopologicalSort();
 
-  solveMSP();
+  // solveMSP();
+  solveDijkstra();
 
   return 0;
 }
