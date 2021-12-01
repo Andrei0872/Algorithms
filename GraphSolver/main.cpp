@@ -75,6 +75,7 @@ class Graph {
     vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
+    void BFS (const vector<vector<int>>&, const int&, vector<bool>&, vector<int>&, int&);
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -570,6 +571,36 @@ vector<vector<int>> Graph::getAllPairsShortestPaths (vector<vector<int>> mat, co
   return mat;
 }
 
+void Graph::BFS (
+  const vector<vector<int>>& adjList,
+  const int& startNodeIdx,
+  vector<bool>& visited,
+  vector<int>& processedTimestamp,
+  int& lastProcessedNodeIdx
+) {
+  queue<int> q;
+  int processingTimestamp = 0;
+  processedTimestamp[startNodeIdx] = 1;
+
+  q.push(startNodeIdx);
+  while (!q.empty()) {
+    auto crtNodeIdx = q.front();
+    q.pop();
+
+    visited[crtNodeIdx] = true;
+
+    for (auto childNodeIdx : adjList[crtNodeIdx]) {
+      if (visited[childNodeIdx]) {
+        continue;
+      }
+
+      processedTimestamp[childNodeIdx] = processedTimestamp[crtNodeIdx] + 1;
+      q.push(childNodeIdx);
+      lastProcessedNodeIdx = childNodeIdx;
+    }
+  }
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -885,6 +916,56 @@ void solveRoyFloyd () {
   }
 }
 
+// TODO: extract read fn
+// TODO: make this a `Graph`'s method
+// 11) https://infoarena.ro/problema/darb
+// Tests: https://infoarena.ro/job_detail/2811373
+void solveGraphDiameter () {
+  ifstream in("darb.in");
+  
+  int N;
+  in >> N;
+  vector<vector<int>> adjList;
+
+  vector<int> row;
+  for (int i = 0; i < N; i++) {
+    row.clear();
+    adjList.push_back(row);
+  }
+
+  int x, y;
+  for (int i = 0; i < N - 1; i++) {
+    in >> x >> y;
+    x--;
+    y--;
+
+    adjList[x].push_back(y);
+    adjList[y].push_back(x);
+  }
+
+  Graph g(N);
+  vector<bool> visited;
+  visited.resize(N);
+
+  vector<int> processTimestamp;
+  processTimestamp.resize(N);
+
+  int lastProcessedNode;
+
+  g.BFS(adjList, 0, visited, processTimestamp, lastProcessedNode);
+
+  for (int i = 0; i < N; i++) {
+    visited[i] = false;
+  }
+
+  g.BFS(adjList, lastProcessedNode, visited, processTimestamp, lastProcessedNode);
+
+  ofstream out("darb.out");
+
+  const int secondBoundary = lastProcessedNode;
+  out << processTimestamp.at(secondBoundary);
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -897,7 +978,9 @@ int main () {
   // solveMSP();
   // solveDijkstra();
 
-  solveRoyFloyd();
+  // solveRoyFloyd();
+  
+  solveGraphDiameter();
 
   return 0;
 }
