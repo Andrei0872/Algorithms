@@ -14,6 +14,10 @@ typedef pair<int, int> Edge;
 typedef pair<Edge, int> EdgeWithCost;
 typedef pair<int, int> DestAndCost;
 
+// This came up as a need to do additions to `INT_MAX`, which will result
+// in negative numbers.
+const int& MAX_SAFEST_INTEGER = INT_MAX / 2;
+
 struct MSPComparator {
   bool operator() (const EdgeWithCost& e1, const EdgeWithCost& e2) {
     return e1.second > e2.second;
@@ -69,6 +73,8 @@ class Graph {
 
     pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
     vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
+
+    static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
 };
 
 Graph::Graph(int n) : nrNodes(n) {
@@ -147,6 +153,9 @@ void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes) {
   }
 }
 
+// TODO: extract BFS
+// TODO: generic fn pt citire
+// TODO: fn cu mai multi params decat var globale in clasa
 int* Graph::showMinEdgesRequiredFromSource (int sourceNodeIdx) {
   int *pathCosts = new int[nrNodes + 1];
   queue<int> q;
@@ -199,6 +208,7 @@ vector<vector<int>> Graph::criticalConnections(int n, vector<vector<int>> &conne
     return result;
 }
 
+// TODO: const int pt input
 void Graph::criticalConnDFS(int crtNodeIdx, int parentNodeIdx, vector<vector<int>>& criticalConns) {
     if (visited[crtNodeIdx]) {
       return;
@@ -538,6 +548,28 @@ vector<int> Graph::getShortestPathsWithDijkstra(list<pair<int, int>>*& adjList, 
   return shortestPaths;
 };
 
+// The idea is to progressively build the paths.
+// We first start with the shortest paths from a node `K` and then we
+// build the shortest paths for the nodes `K+1...` based on the previously computed results.
+// For instance, if we're at node `2`, then the distance from 1 to 3 will be the min between
+// the existing distance of those nodes and the sum of `dist[1][2]` and `dist[2][3]`.
+vector<vector<int>> Graph::getAllPairsShortestPaths (vector<vector<int>> mat, const int& size) {
+  for (int k = 0; k < size; k++) {
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        bool isSelfLoop = i == j;
+        if (isSelfLoop) {
+          continue;
+        }
+
+        mat[i][j] = min(mat[i][j], mat[i][k] + mat[k][j]);
+      }
+    }
+  }
+
+  return mat;
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -814,6 +846,45 @@ void solveDijkstra () {
   out.close();
 }
 
+// 10) https://infoarena.ro/problema/royfloyd
+// Tests: https://infoarena.ro/job_detail/2811366
+void solveRoyFloyd () {
+  ifstream in("royfloyd.in");
+  int N;
+
+  in >> N;
+  vector<vector<int>>mat;
+
+  vector<int> row;
+  int elem;
+  for (int i = 0; i < N; i++) {
+    row.clear();
+
+    for (int j = 0; j < N; j++) {
+      in >> elem;
+
+      // When there is no connection between the nodes `i` and `j`,
+      // we use a very large number since it will ease the process later,
+      // because we're looking for min paths.
+      elem = elem == 0 ? MAX_SAFEST_INTEGER : elem;
+      elem = i == j ? 0 : elem;
+
+      row.push_back(elem);
+    }
+
+    mat.push_back(row);
+  }
+
+  ofstream out("royfloyd.out");
+  auto res = Graph::getAllPairsShortestPaths(mat, N);
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      out << res[i][j] << ' ';
+    }
+    out << '\n';
+  }
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -824,7 +895,9 @@ int main () {
   // solveTopologicalSort();
 
   // solveMSP();
-  solveDijkstra();
+  // solveDijkstra();
+
+  solveRoyFloyd();
 
   return 0;
 }
