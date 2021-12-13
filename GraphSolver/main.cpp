@@ -54,6 +54,7 @@ class Graph {
 
     void extractSCCFromStack(int);
 
+    vector<int> getEulerianPath (const int&, vector<vector<int>>&, const vector<Edge>&);
   public:
     Graph(int);
     ~Graph();
@@ -70,6 +71,7 @@ class Graph {
     void DFSforSCC(int);
     void printSCCs();
     static void printInTopologicalOrder();
+    static void printEulerianPath();
 
     pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
     vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
@@ -601,6 +603,98 @@ void Graph::BFS (
   }
 }
 
+vector<int> Graph::getEulerianPath(const int& nrEdges, vector<vector<int>>& nodesAndEdges, const vector<Edge>& edges) {
+  vector<int> result;
+  vector<bool> visitedEdges(nrEdges);
+  // visitedEdges.resize(nrEdges);
+  
+  stack<int> nodesStack;
+  nodesStack.push(0);
+  while (!nodesStack.empty()) {
+    const int node = nodesStack.top();
+
+    const bool hasUnconsideredEdges = !nodesAndEdges[node].empty();
+    if (hasUnconsideredEdges) {
+      const int edgeID = nodesAndEdges[node].back();
+      nodesAndEdges[node].pop_back();
+      if (visitedEdges[edgeID]) {
+        continue;
+      }
+
+      visitedEdges[edgeID] = true;
+
+      auto edge = edges[edgeID];
+      // This is a shortcut for: if `node == edge.first`, then choose `edge.second`; else if `node == edge.second`,
+      // choose `edge.first`. It based on the fact that `x ^ x = 0` and on the fact that node is either `edge.first`
+      // or `edge.second`.
+      const int nextNode = edge.first ^ edge.second ^ node;
+      nodesStack.push(nextNode);
+    } else {
+      // At this point, the current `node` doesn't have any unconsidered edges.
+      nodesStack.pop();
+      result.push_back(node);
+    }
+  }
+
+  return result;
+}
+
+// Since the solution to this problem is based on traversing all the **edges**
+// that are are given in a graph, we will have to keep track of their *visit status*.
+// The idea here is to traverse the edges in a *greedy* fashion, hence we will use DFS. Once an edge
+// has been marked as visited, it can't be traversed again. Given a node `V`, we know it's time to
+// add it to the result array when there are no unvisited edges that contain `V`.
+// If the number of edges that contain a given node `V` is **odd**, an empty array will be returned.
+void Graph::printEulerianPath () {
+  ifstream in("ciclueuler.in");
+  // vector<int> result;
+  vector<Edge> edges;
+  vector<vector<int>> nodesAndEdges;
+  // vector<bool> visitedEdges;
+  int N, M;
+
+  in >> N >> M;
+  Graph g(N);
+  edges.resize(M);
+  // visitedEdges.resize(M);
+
+  int x, y;
+  for (int edgeID = 0; edgeID < M; edgeID++) {
+    in >> x >> y;
+    x--;
+    y--;
+
+    edges[edgeID] = make_pair(x, y);
+
+    const int xKey = x + 1;
+    const int yKey = y + 1;
+    const int maxRequiredArrSize = max(xKey,yKey);
+    if (maxRequiredArrSize > nodesAndEdges.size()) {
+      nodesAndEdges.resize(maxRequiredArrSize);
+    }
+
+    // Because there are no hints about the graph's direction, I have assumed the graph is **undirected**.
+    // The below 2 lines say that the nodes `x` and `y` belong to the edge with the ID `edgeID`.
+    nodesAndEdges[x].push_back(edgeID);
+    nodesAndEdges[y].push_back(edgeID);
+  }
+  in.close();
+
+  ofstream out("ciclueuler.out");
+  for (int i = 0; i < N; i++) {
+    if (nodesAndEdges[i].size() % 2) {
+      out << "-1";
+      return;
+    }
+  }
+
+  auto result = g.getEulerianPath(M, nodesAndEdges, edges);
+  for (int i = 0; i < result.size() - 1; i++) {
+    out << result[i] + 1 << ' ';
+  }
+  out.close();
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
@@ -966,6 +1060,12 @@ void solveGraphDiameter () {
   out << processTimestamp.at(secondBoundary);
 }
 
+// 12) https://infoarena.ro/problema/ciclueuler
+// Tests: https://infoarena.ro/job_detail/2817406
+void solveEulerianPath () {
+  Graph::printEulerianPath();
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -980,7 +1080,9 @@ int main () {
 
   // solveRoyFloyd();
   
-  solveGraphDiameter();
+  // solveGraphDiameter();
+
+  solveEulerianPath();
 
   return 0;
 }
