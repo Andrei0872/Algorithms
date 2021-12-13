@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <limits.h>
+#include <cstring>
 
 using namespace std;
 
@@ -72,6 +73,7 @@ class Graph {
     void printSCCs();
     static void printInTopologicalOrder();
     static void printEulerianPath();
+    static void printCostOfHamiltonianPath();
 
     pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
     vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
@@ -695,11 +697,127 @@ void Graph::printEulerianPath () {
   out.close();
 }
 
+
+// The idea here is that we need to find a **cycle**. So, if we know that if we start with a given
+// node `V`, the path must and with the same node `V`. This leads to the idea that we can choose a
+// random node to start with and when the cycle is completed(i.e. we arrived where we started from)
+// we can start building backwards. Reaching again the starting point can be thought of as the *base* case.
+// In order to compute the minimum cost once the cycle has been found, we will visit the nodes in opposed order
+// from the starting point.
+void Graph::printCostOfHamiltonianPath () {
+  const int MAX_NR_NODES = 19;
+
+  ifstream in("hamilton.in");
+  // `innerEdgesFrom[V]` -> the collections of nodes which have `V` as destination.
+  vector<vector<int>> innerEdgesFrom;
+  int costs[MAX_NR_NODES][MAX_NR_NODES];
+  int **minCostToNodeWithGivenPath;
+
+  int N, M;
+  in >> N >> M;
+
+  innerEdgesFrom.resize(N);
+
+  minCostToNodeWithGivenPath = new int*[1 << N];
+  for (int i = 0; i < 1 << N; i++) {
+    minCostToNodeWithGivenPath[i] = new int[MAX_NR_NODES];
+    for (int j = 0; j < MAX_NR_NODES; j++) {
+      minCostToNodeWithGivenPath[i][j] = -1;
+    }
+  }
+
+  for (int i = 0; i < N; i++) {
+    // innerEdgesFrom[i].resize(N);
+
+    for (int j = 0; j < N; j++) {
+      costs[i][j] = MAX_SAFEST_INTEGER;
+    }
+  }
+
+  int x, y, cost;
+  for (int i = 0; i < M; i++) {
+    in >> x >> y >> cost;
+
+    // We keep track of costs by using the edge direction.
+    costs[x][y] = cost;
+    innerEdgesFrom[y].push_back(x);
+  }
+  in.close();
+
+  // memset(minCostToNodeWithGivenPath, -1, sizeof(minCostToNodeWithGivenPath) * (1 << N) * MAX_NR_NODES);
+  // It is assumed to start at node 0.
+  // With this, we're basically setting the base case, for when we'd reach the point we started from.
+  // It says: *the cost for arriving at node `0` with the path being composed only of `0` is `0`*
+  // The path is in binary, so `1` below marks that only the node `0` is part of the path
+  // because its corresponding bit is set to 1.
+  minCostToNodeWithGivenPath[1][0] = 0;
+
+  // We keep track of the `path` by using its binary representation.
+  // If N = 3, then the `path` can be at most `0b111`, which indicates that all the
+  // possible nodes have been used to compute the minimum cost.
+  function<int(int, int)> computeMinCostToNodeGivenThePath = [&](int path, int node) {
+    // TODO: comment (memoization)
+    const bool isCostAlreadyFound = minCostToNodeWithGivenPath[path][node] != -1;
+    if (isCostAlreadyFound) {
+      return minCostToNodeWithGivenPath[path][node];
+    }
+
+    // Setting this to a big value since we need to find the minimum.
+    minCostToNodeWithGivenPath[path][node] = MAX_SAFEST_INTEGER;
+
+    for (auto sourceNode : innerEdgesFrom[node]) {
+      const bool isPartOfPath = path & (1 << sourceNode);
+      if (!isPartOfPath) {
+        continue;
+      }
+
+      const bool isSourceTheStartingNode = sourceNode == 0;
+      const bool isCrtNodeExactlyBeforeStartingNodeInPath = path == (1 << node) + 1;
+      if (isSourceTheStartingNode && !isCrtNodeExactlyBeforeStartingNodeInPath) {
+        continue;
+      }
+
+      const int pathWithoutCurrentNode = path ^ (1 << node);
+      const int costFromSourceToDest = costs[sourceNode][node];
+
+      // Keep *removing* nodes from the path until we arrive at the node that we started from.
+      // After that, the minimum cost can be determined based on the previously computed results.
+      minCostToNodeWithGivenPath[path][node] = min(
+        minCostToNodeWithGivenPath[path][node],
+        computeMinCostToNodeGivenThePath(pathWithoutCurrentNode, sourceNode) + costFromSourceToDest
+      );
+    }
+
+    return minCostToNodeWithGivenPath[path][node];
+  };
+
+  int result = MAX_SAFEST_INTEGER;
+  const int pathWithAllNodes = (1 << N) - 1;
+  for (auto sourceNode : innerEdgesFrom[0]) {
+    // Computing all the costs for all the paths which start and end in `0`.
+    result = min(result, computeMinCostToNodeGivenThePath(pathWithAllNodes, sourceNode) + costs[sourceNode][0]);
+  }
+
+  ofstream out("hamilton.out");
+
+  // If `result` still has the `MAX_SAFEST_INTEGER` value, it means a cycle does not
+  // exist in the graph. If it did, the program would reach the part where `minCostToNodeWithGivenPath[path][node]`
+  // was not `-1`: `minCostToNodeWithGivenPath[1][0]`.
+  const bool hasFoundSolution = result != MAX_SAFEST_INTEGER;
+  if (hasFoundSolution) {
+    out << result;
+  } else {
+    out << "Nu exista solutie";
+  }
+
+  out.close();
+}
+
 // ===============================================================================================================
 
 // 1) Problem: https://infoarena.ro/problema/dfs
-// Tests: https://infoarena.ro/job_detail/2784008
-void solveNrOfConnectedComponents () {
+    // Tests: https://infoarena.ro/job_detail/2784008
+void solveNrOfConnectedComponents() {
   fstream in("dfs.in");
   int N, M;
 
@@ -1066,6 +1184,10 @@ void solveEulerianPath () {
   Graph::printEulerianPath();
 }
 
+void solveCostOfHamiltonianPath () {
+  Graph::printCostOfHamiltonianPath();
+}
+
 int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
@@ -1082,7 +1204,8 @@ int main () {
   
   // solveGraphDiameter();
 
-  solveEulerianPath();
+  // solveEulerianPath();
+  solveCostOfHamiltonianPath();
 
   return 0;
 }
