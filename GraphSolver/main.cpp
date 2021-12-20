@@ -33,27 +33,16 @@ struct DijkstraComparator {
 
 class Graph {
   private:
-    // list<int>* adjList;
     vector<vector<int>> adjList;
     int nrNodes, nrEdges;
     bool isUndirected = true;
-    // bool* visited;
 
     int sourceNodeIdx;
 
-    // int *ingressTimestamp;
-    // int *lowestLevelReached;
-
-    // bool isSolvingBiconnected = false;
-    // stack<pair<int, int>> visitedEdges;
-    // vector<deque<int>> biconnectedComponents;
-
-    // bool* isInStack;
-    // stack<int> visitedNodes;
-    // vector<vector<int>> SCCs;
-
     void DFS(int, int, bool&, vector<bool>&);
+
     void buildAdjList(vector<vector<int>>&);
+
     void criticalConnDFS(int, int, vector<vector<int>>&, vector<bool>&, bool&, stack<pair<int, int>>&, vector<deque<int>>&);
 
     void extractSCCFromStack(int, stack<int>&, vector<bool>&, vector<vector<int>>&);
@@ -63,24 +52,28 @@ class Graph {
     void DFSforSCC(int, vector<bool>&, vector<bool>&, stack<int>&, vector<vector<int>>&);
   public:
     Graph(int);
-    ~Graph();
     void addEdge(int, int);
+
     void setUndirected(bool);
 
     int getNrOfConnectedComponents();
+
     vector<int> showMinEdgesRequiredFromSource();
+
     vector<vector<int>> criticalConnections(int, vector<vector<int>>&, bool);
 
-    // void DFSforSCC(int, vector<bool>&, vector<bool>&, stack<int>&, vector<vector<int>>&);
-    // void printSCCs();
     static void printInTopologicalOrder();
+
     static void printEulerianPath();
+
     static void printCostOfHamiltonianPath();
 
     pair<int, vector<Edge>> getMSPAndTotalCost(vector<vector<pair<int, int>>> &, const int &);
+
     vector<int> getShortestPathsWithDijkstra(vector<vector<pair<int, int>>> &, const int&);
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
+
     void BFS (const int&, vector<bool>&, vector<int>&, int&);
 
     vector<deque<int>> getBiconnectedComponents();
@@ -104,24 +97,7 @@ class Graph {
 };
 
 Graph::Graph(int n) : nrNodes(n) {
-  // adjList = new list<int>[nrNodes + 1];
-  // visited = new bool[nrNodes + 1];
-
-  // // In LeetCode the arrays are 0-based.
-  // ingressTimestamp = new int[n + 1];
-  // lowestLevelReached = new int[n + 1];
-
-  // isInStack = new bool[n + 1];
-
   adjList.resize(nrNodes);
-};
-
-Graph::~Graph () {
-  // delete []adjList;
-  // delete visited;
-  // delete ingressTimestamp;
-  // delete lowestLevelReached;
-  // delete isInStack;
 };
 
 void Graph::setUndirected(bool newV) {
@@ -185,7 +161,6 @@ void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes, vec
 vector<int> Graph::showMinEdgesRequiredFromSource () {
   vector<bool> visited(nrNodes);
   
-  // int *pathCosts = new int[nrNodes + 1];
   vector<int> pathCosts(nrNodes);
   queue<int> q;
 
@@ -434,21 +409,6 @@ void Graph::extractSCCFromStack (
   SCCs.push_back(SCC);
 }
 
-// void Graph::printSCCs () {
-//   ofstream out("ctc.out");
-  
-//   out << SCCs.size() << '\n';
-
-//   for (auto SCC : SCCs) {
-//     for (auto v : SCC) {
-//       out << v << ' ';
-//     }
-//     out << '\n';
-//   }
-
-//   out.close();
-// }
-
 void Graph::printInTopologicalOrder () {
   ifstream in("sortaret.in");
   int N, M;
@@ -681,7 +641,6 @@ int Graph:: getGraphDiameter () {
 vector<int> Graph::getEulerianPath(const int& nrEdges, vector<vector<int>>& nodesAndEdges, const vector<Edge>& edges) {
   vector<int> result;
   vector<bool> visitedEdges(nrEdges);
-  // visitedEdges.resize(nrEdges);
   
   stack<int> nodesStack;
   nodesStack.push(0);
@@ -722,16 +681,13 @@ vector<int> Graph::getEulerianPath(const int& nrEdges, vector<vector<int>>& node
 // If the number of edges that contain a given node `V` is **odd**, an empty array will be returned.
 void Graph::printEulerianPath () {
   ifstream in("ciclueuler.in");
-  // vector<int> result;
   vector<Edge> edges;
   vector<vector<int>> nodesAndEdges;
-  // vector<bool> visitedEdges;
   int N, M;
 
   in >> N >> M;
   Graph g(N);
   edges.resize(M);
-  // visitedEdges.resize(M);
 
   int x, y;
   for (int edgeID = 0; edgeID < M; edgeID++) {
@@ -800,8 +756,6 @@ void Graph::printCostOfHamiltonianPath () {
   }
 
   for (int i = 0; i < N; i++) {
-    // innerEdgesFrom[i].resize(N);
-
     for (int j = 0; j < N; j++) {
       costs[i][j] = MAX_SAFEST_INTEGER;
     }
@@ -817,7 +771,6 @@ void Graph::printCostOfHamiltonianPath () {
   }
   in.close();
 
-  // memset(minCostToNodeWithGivenPath, -1, sizeof(minCostToNodeWithGivenPath) * (1 << N) * MAX_NR_NODES);
   // It is assumed to start at node 0.
   // With this, we're basically setting the base case, for when we'd reach the point we started from.
   // It says: *the cost for arriving at node `0` with the path being composed only of `0` is `0`*
@@ -933,17 +886,7 @@ Graph getPopulatedGraphFromFileName (const char* INPUT_FILE_NAME, bool hasSource
 void solveNrOfConnectedComponents() {
   const char* INPUT_FILE_NAME = "dfs.in";
   const char* OUTPUT_FILE_NAME = "dfs.out";
-  // fstream in("dfs.in");
-  // int N, M;
 
-  // in >> N >> M;
-  // Graph g(N);
-
-  // int x, y;
-  // for (int i = 0; i < M; i++) {
-  //   in >> x >> y;
-  //   g.addEdge(x, y);
-  // }
   auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, -1);
 
   ofstream out(OUTPUT_FILE_NAME);
@@ -958,20 +901,6 @@ void solveMinEdgesRequiredFromSource () {
   const char* INPUT_FILE_NAME = "bfs.in";
   const char* OUTPUT_FILE_NAME = "bfs.out";
 
-  // int N, M, S;
-
-  // ifstream in("bfs.in");
-  // in >> N >> M >> S;
-  
-  // Graph g(N);
-  // g.setUndirected(false);
-
-  // int x, y;
-  // for (int i = 1; i <= M; i++) {
-  //   in >> x >> y;
-  //   g.addEdge(x, y);
-  // }
-
   auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, true, true);
 
   ofstream out("bfs.out");
@@ -980,7 +909,6 @@ void solveMinEdgesRequiredFromSource () {
     out << pathCosts[i] << ' ';
   }
 
-  // in.close();
   out.close();
 }
 
@@ -1028,27 +956,9 @@ void solveCriticalConnections () {
 void solveBiconnectedComponents () {
   const char* INPUT_FILE_NAME = "biconex.in";
   const char* OUTPUT_FILE_NAME = "biconex.out";
-  
-  // ifstream in("biconex.in");
-  // int N, M;
-
-  // in >> N >> M;
-  // Graph g(N);
-
-  // int x, y;
-  // for (int i = 0; i < M; i++) {
-  //   in >> x >> y;
-  //   g.addEdge(x - 1, y - 1);
-  // }
-
-  // in.close();
 
   auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME);
 
-  // vector<vector<int>> unneeded;
-  // g.criticalConnections(g.getNrNodes(), unneeded, true);
-
-  // g.printBiconnectedComponents();
   auto biconnectedComponents = g.getBiconnectedComponents();
   ofstream out(OUTPUT_FILE_NAME);
 
@@ -1069,27 +979,6 @@ void solveBiconnectedComponents () {
 void solveStronglyConnectedComponents () {
   const char* INPUT_FILE_NAME = "ctc.in";
   const char* OUTPUT_FILE_NAME = "ctc.out";
-  
-  // ifstream in("ctc.in");
-  // int N, M;
-  
-  // in >> N >> M;
-  // Graph g(N);
-  // g.setUndirected(false);
-
-  // int x, y;
-  // for (int i = 0; i < M; i++) {
-  //   in >> x >> y;
-  //   g.addEdge(x, y);
-  // }
-
-  // in.close();
-  
-  // for (int i = 1; i <= N; i++) {
-  //   g.DFSforSCC(i);
-  // }
-  
-  // g.printSCCs();
 
   auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, false, true);
 
@@ -1306,6 +1195,8 @@ void solveEulerianPath () {
   Graph::printEulerianPath();
 }
 
+// 13) https://infoarena.ro/problema/hamilton
+// Tests: https://infoarena.ro/job_detail/2820478
 void solveCostOfHamiltonianPath () {
   Graph::printCostOfHamiltonianPath();
 }
@@ -1327,7 +1218,7 @@ int main () {
   // solveGraphDiameter();
 
   // solveEulerianPath();
-  // solveCostOfHamiltonianPath();
+  solveCostOfHamiltonianPath();
 
   return 0;
 }
