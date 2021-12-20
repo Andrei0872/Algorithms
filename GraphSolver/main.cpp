@@ -33,25 +33,28 @@ struct DijkstraComparator {
 
 class Graph {
   private:
-    list<int>* adjList;
+    // list<int>* adjList;
+    vector<vector<int>> adjList;
     int nrNodes, nrEdges;
     bool isUndirected = true;
-    bool* visited;
+    // bool* visited;
 
-    int *ingressTimestamp;
-    int *lowestLevelReached;
+    int sourceNodeIdx;
 
-    bool isSolvingBiconnected = false;
-    stack<pair<int, int>> visitedEdges;
-    vector<deque<int>> biconnectedComponents;
+    // int *ingressTimestamp;
+    // int *lowestLevelReached;
+
+    // bool isSolvingBiconnected = false;
+    // stack<pair<int, int>> visitedEdges;
+    // vector<deque<int>> biconnectedComponents;
 
     bool* isInStack;
     stack<int> visitedNodes;
     vector<vector<int>> SCCs;
 
-    void DFS(int, int, bool&);
-    void buildAdjList(int, vector<vector<int>>&);
-    void criticalConnDFS(int, int, vector<vector<int>>&);
+    void DFS(int, int, bool&, vector<bool>&);
+    void buildAdjList(vector<vector<int>>&);
+    void criticalConnDFS(int, int, vector<vector<int>>&, vector<bool>&, bool&, stack<pair<int, int>>&, vector<deque<int>>&);
 
     void extractSCCFromStack(int);
 
@@ -63,12 +66,9 @@ class Graph {
     void setUndirected(bool);
 
     int getNrOfConnectedComponents();
-    int* showMinEdgesRequiredFromSource(int);
-    vector<vector<int>> criticalConnections(int, vector<vector<int>>&);
+    vector<int> showMinEdgesRequiredFromSource();
+    vector<vector<int>> criticalConnections(int, vector<vector<int>>&, bool);
 
-    void setIsSolvingBiconnected(bool);
-    void printBiconnectedComponents();
-    
     void DFSforSCC(int);
     void printSCCs();
     static void printInTopologicalOrder();
@@ -80,25 +80,42 @@ class Graph {
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
     void BFS (const vector<vector<int>>&, const int&, vector<bool>&, vector<int>&, int&);
+
+    vector<deque<int>> getBiconnectedComponents();
+
+    void setSourceNodeIdx (int& newSourceNodeIdx) {
+      sourceNodeIdx = newSourceNodeIdx;
+    }
+
+    int getSourceNodeIdx () {
+      return sourceNodeIdx;
+    }
+
+    int getNrNodes () {
+      return nrNodes;
+    }
+
 };
 
 Graph::Graph(int n) : nrNodes(n) {
-  adjList = new list<int>[nrNodes + 1];
-  visited = new bool[nrNodes + 1];
+  // adjList = new list<int>[nrNodes + 1];
+  // visited = new bool[nrNodes + 1];
 
-  // In LeetCode the arrays are 0-based.
-  ingressTimestamp = new int[n + 1];
-  lowestLevelReached = new int[n + 1];
+  // // In LeetCode the arrays are 0-based.
+  // ingressTimestamp = new int[n + 1];
+  // lowestLevelReached = new int[n + 1];
 
-  isInStack = new bool[n + 1];
+  // isInStack = new bool[n + 1];
+
+  adjList.resize(nrNodes);
 };
 
 Graph::~Graph () {
-  delete []adjList;
-  delete visited;
-  delete ingressTimestamp;
-  delete lowestLevelReached;
-  delete isInStack;
+  // delete []adjList;
+  // delete visited;
+  // delete ingressTimestamp;
+  // delete lowestLevelReached;
+  // delete isInStack;
 };
 
 void Graph::setUndirected(bool newV) {
@@ -115,7 +132,7 @@ void Graph::addEdge(int x, int y) {
   adjList[y].push_back(x);
 }
 
-void Graph::buildAdjList(int n, vector<vector<int>> &connections) {
+void Graph::buildAdjList(vector<vector<int>> &connections) {
   for (auto p : connections) {
     int vertex1 = p.at(0);
     int vertex2 = p.at(1);
@@ -128,10 +145,11 @@ void Graph::buildAdjList(int n, vector<vector<int>> &connections) {
 int Graph::getNrOfConnectedComponents () {
   int nrConnectedComponents = 0;
   bool hadUnvisitedNodes;
+  vector<bool> visited(nrNodes);
   
-  for (int i = 1; i <= nrNodes; i++) {
+  for (int i = 0; i < nrNodes; i++) {
     hadUnvisitedNodes = false;
-    DFS(i, i, hadUnvisitedNodes);
+    DFS(i, i, hadUnvisitedNodes, visited);
 
     nrConnectedComponents += (int) hadUnvisitedNodes;
   }
@@ -139,7 +157,7 @@ int Graph::getNrOfConnectedComponents () {
   return nrConnectedComponents;
 }
 
-void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes) {
+void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes, vector<bool>& visited) {
   bool wasVisitedBefore = visited[nodeIdx];
   visited[nodeIdx] = true;
   
@@ -150,7 +168,7 @@ void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes) {
 
     hadUnvisitedNodes = hadUnvisitedNodes || true;
 
-    DFS(childNodeIdx, componentRootIdx, hadUnvisitedNodes);
+    DFS(childNodeIdx, componentRootIdx, hadUnvisitedNodes, visited);
   }
 
   if (!wasVisitedBefore && componentRootIdx == nodeIdx) {
@@ -158,14 +176,14 @@ void Graph::DFS (int nodeIdx, int componentRootIdx, bool& hadUnvisitedNodes) {
   }
 }
 
-// TODO: extract BFS
-// TODO: generic fn pt citire
-// TODO: fn cu mai multi params decat var globale in clasa
-int* Graph::showMinEdgesRequiredFromSource (int sourceNodeIdx) {
-  int *pathCosts = new int[nrNodes + 1];
+vector<int> Graph::showMinEdgesRequiredFromSource () {
+  vector<bool> visited(nrNodes);
+  
+  // int *pathCosts = new int[nrNodes + 1];
+  vector<int> pathCosts(nrNodes);
   queue<int> q;
 
-  for (int i = 1; i <= nrNodes; i++) {
+  for (int i = 0; i < nrNodes; i++) {
     pathCosts[i] = -1;
   }
 
@@ -189,143 +207,152 @@ int* Graph::showMinEdgesRequiredFromSource (int sourceNodeIdx) {
     }
   }
 
-  // for (int i = 1; i <= nrNodes; i++) {
-  //   cout << pathCosts[i] << '\n';
-  // }
   return pathCosts;
 }
 
-// ! Important: in LeetCode, arrays are 0-based.
-vector<vector<int>> Graph::criticalConnections(int n, vector<vector<int>> &connections) {
-    if (!isSolvingBiconnected) {
-      buildAdjList(n, connections);
-    }
-  
-    // for (int i = 0; i < n; i++) {
-    //   visited[i] = false;
-    // }
-    
-    vector<vector<int>> result;
-    for (int i = 0; i < n; i++) {
-      criticalConnDFS(i, -1, result);
-    }
+vector<vector<int>> Graph::criticalConnections(int n, vector<vector<int>> &connections, bool isSolvingBiconnected = false) {
+  if (!isSolvingBiconnected) {
+    buildAdjList(connections);
+  }
 
-    return result;
+  vector<bool> visited(nrNodes);
+
+  stack<pair<int, int>> unneeded1;
+  vector<deque<int>> unneeded2;
+
+  vector<vector<int>> result;
+  for (int i = 0; i < nrNodes; i++) {
+    criticalConnDFS(i, -1, result, visited, isSolvingBiconnected, unneeded1, unneeded2);
+  }
+
+  return result;
 }
 
-// TODO: const int pt input
-void Graph::criticalConnDFS(int crtNodeIdx, int parentNodeIdx, vector<vector<int>>& criticalConns) {
-    if (visited[crtNodeIdx]) {
-      return;
-    }
+void Graph::criticalConnDFS(
+  int crtNodeIdx,
+  int parentNodeIdx,
+  vector<vector<int>>& criticalConns,
+  vector<bool>& visited,
+  bool& isSolvingBiconnected,
+  stack<pair<int, int>>& visitedEdges,
+  vector<deque<int>>& biconnectedComponents
+) {
+  if (visited[crtNodeIdx]) {
+    return;
+  }
 
-    visited[crtNodeIdx] = true;
+  visited[crtNodeIdx] = true;
 
-    static int ingressCount = 0;
+  static int ingressCount = 0;
 
-    // Set the current node's ingress time
-    // At this point, both are the same because this is the starting point(i.e. the DFS on the subtree hasn't been done).
-    ingressTimestamp[crtNodeIdx] = lowestLevelReached[crtNodeIdx] = ingressCount++;
-    
-    for (int childNodeIdx : adjList[crtNodeIdx]) {
-      if (!visited[childNodeIdx]) {
+  static vector<int> ingressTimestamp(nrNodes);
+  static vector<int> lowestLevelReached(nrNodes);
+
+  // Set the current node's ingress time
+  // At this point, both are the same because this is the starting point(i.e. the DFS on the subtree hasn't been done).
+  ingressTimestamp[crtNodeIdx] = lowestLevelReached[crtNodeIdx] = ingressCount++;
+  
+  for (int childNodeIdx : adjList[crtNodeIdx]) {
+    if (!visited[childNodeIdx]) {
+      if (isSolvingBiconnected) {
+        visitedEdges.push({ crtNodeIdx, childNodeIdx });
+      }
+      // 'Consume' the subtree first so that we can computed the value in `lowestLevelReached`
+      // for the current node based on the values obtained from its children.
+      criticalConnDFS(childNodeIdx, crtNodeIdx, criticalConns, visited, isSolvingBiconnected, visitedEdges, biconnectedComponents);
+
+      // After the DFS, determine the lowest level that the current node can reach.
+      // We factor in the `lowestLevelReached` of the current index and the `lowestLevelReached`
+      // of this current child.
+      lowestLevelReached[crtNodeIdx] = min(lowestLevelReached[crtNodeIdx], lowestLevelReached[childNodeIdx]);
+
+      // Saving the critical connection.
+      // We're **not** using `lowestLevelReached[crtNodeIdx]` because if
+      // `lowestLevelReached[childNodeIdx]` is bigger than `ingressTimestamp[crtNodeIdx]`,
+      // then it will be **for sure** greater than `lowestLevelReached[crtNodeIdx]`.
+      // Moreover, in order to a node P to be considered an articulation point,
+      // it must have a child C such that, through the subtree rooted in C, either the node P or one of its
+      // ancestor can be reached. So, in order for it not to be an articulation point, it suffices
+      // `lowestLevelReached[childNodeIdx] <= ingressTimestamp[crtNodeIdx]` to be fulfilled.
+      // ! Note: The `infoarena`'s *biconex* problem requires `>=`. `isSolvingBiconnected` is true
+      // ! when that problem is being solved
+      bool isCrtNodeArticulationPoint = isSolvingBiconnected == true && (lowestLevelReached[childNodeIdx] >= ingressTimestamp[crtNodeIdx]) || (lowestLevelReached[childNodeIdx] > ingressTimestamp[crtNodeIdx]);
+      if (isCrtNodeArticulationPoint) {
+        vector<int>connection;
+        connection.push_back(crtNodeIdx);
+        connection.push_back(childNodeIdx);
+
+        criticalConns.push_back(connection);
+
         if (isSolvingBiconnected) {
-          visitedEdges.push({ crtNodeIdx, childNodeIdx });
-        }
-        // 'Consume' the subtree first so that we can computed the value in `lowestLevelReached`
-        // for the current node based on the values obtained from its children.
-        criticalConnDFS(childNodeIdx, crtNodeIdx, criticalConns);
+          deque<int> biconnectedComponent;
 
-        // After the DFS, determine the lowest level that the current node can reach.
-        // We factor in the `lowestLevelReached` of the current index and the `lowestLevelReached`
-        // of this current child.
-        lowestLevelReached[crtNodeIdx] = min(lowestLevelReached[crtNodeIdx], lowestLevelReached[childNodeIdx]);
+          bool isFirstIt = true;
+          while (true) {
+            auto edge = visitedEdges.top();
+            visitedEdges.pop();
 
-        // Saving the critical connection.
-        // We're **not** using `lowestLevelReached[crtNodeIdx]` because if
-        // `lowestLevelReached[childNodeIdx]` is bigger than `ingressTimestamp[crtNodeIdx]`,
-        // then it will be **for sure** greater than `lowestLevelReached[crtNodeIdx]`.
-        // Moreover, in order to a node P to be considered an articulation point,
-        // it must have a child C such that, through the subtree rooted in C, either the node P or one of its
-        // ancestor can be reached. So, in order for it not to be an articulation point, it suffices
-        // `lowestLevelReached[childNodeIdx] <= ingressTimestamp[crtNodeIdx]` to be fulfilled.
-        // ! Note: The `infoarena`'s *biconex* problem requires `>=`. `isSolvingBiconnected` is true
-        // ! when that problem is being solved
-        bool isCrtNodeArticulationPoint = isSolvingBiconnected == true && (lowestLevelReached[childNodeIdx] >= ingressTimestamp[crtNodeIdx]) || (lowestLevelReached[childNodeIdx] > ingressTimestamp[crtNodeIdx]);
-        if (isCrtNodeArticulationPoint) {
-          vector<int>connection;
-          connection.push_back(crtNodeIdx);
-          connection.push_back(childNodeIdx);
+            int v1 = edge.first;
+            int v2 = edge.second;
+            bool shouldStop = edge.first == crtNodeIdx && edge.second == childNodeIdx;
 
-          criticalConns.push_back(connection);
-
-          if (isSolvingBiconnected) {
-            deque<int> biconnectedComponent;
-
-            bool isFirstIt = true;
-            while (true) {
-              auto edge = visitedEdges.top();
-              visitedEdges.pop();
-
-              int v1 = edge.first;
-              int v2 = edge.second;
-              bool shouldStop = edge.first == crtNodeIdx && edge.second == childNodeIdx;
-
-              if (isFirstIt) {
-                isFirstIt = false;
-                biconnectedComponent.push_front(v2);
-                biconnectedComponent.push_front(v1);
-                
-                if (shouldStop) {
-                  break;
-                }
-
-                continue;
-              }
-
+            if (isFirstIt) {
+              isFirstIt = false;
+              biconnectedComponent.push_front(v2);
               biconnectedComponent.push_front(v1);
+              
               if (shouldStop) {
                 break;
               }
+
+              continue;
             }
 
-            biconnectedComponents.push_back(biconnectedComponent);
+            biconnectedComponent.push_front(v1);
+            if (shouldStop) {
+              break;
+            }
           }
+
+          biconnectedComponents.push_back(biconnectedComponent);
         }
-      } else {
-        // Recall that this branch is considered if the `childNodeIdx` is visited.
-        // So, if the child has been already visited, than it makes sense to take its
-        // `ingressTimestamp[childNodeIdx]` value and **not** `lowestLevelReached[childNodeIdx]`
-        // `ingressTimestamp` is just enough since, being already visited, it has a **lower**
-        // `ingressTimestamp` than the current `childNodeIdx`.
-        bool hasPossiblyReachedALowerLevel = parentNodeIdx != childNodeIdx && parentNodeIdx != -1;
-        if (hasPossiblyReachedALowerLevel) {
-          lowestLevelReached[crtNodeIdx] = min(lowestLevelReached[crtNodeIdx], ingressTimestamp[childNodeIdx]);
-        }
+      }
+    } else {
+      // Recall that this branch is considered if the `childNodeIdx` is visited.
+      // So, if the child has been already visited, than it makes sense to take its
+      // `ingressTimestamp[childNodeIdx]` value and **not** `lowestLevelReached[childNodeIdx]`
+      // `ingressTimestamp` is just enough since, being already visited, it has a **lower**
+      // `ingressTimestamp` than the current `childNodeIdx`.
+      bool hasPossiblyReachedALowerLevel = parentNodeIdx != childNodeIdx && parentNodeIdx != -1;
+      if (hasPossiblyReachedALowerLevel) {
+        lowestLevelReached[crtNodeIdx] = min(lowestLevelReached[crtNodeIdx], ingressTimestamp[childNodeIdx]);
       }
     }
   }
-
-void Graph::setIsSolvingBiconnected (bool newV) {
-  isSolvingBiconnected = newV;
 }
 
-void Graph::printBiconnectedComponents () {
-  ofstream out("biconex.out");
+vector<deque<int>> Graph::getBiconnectedComponents () {
+  stack<pair<int, int>> visitedEdges;
+  vector<deque<int>> biconnectedComponents;
 
-  out << biconnectedComponents.size() << '\n';
+  vector<bool> visited(nrNodes);
+  vector<vector<int>> unneeded;
 
-  for (auto bComp : biconnectedComponents) {
-    for (auto node : bComp) {
-      out << node + 1 << ' ';
-    }
-    out << '\n';
+  bool isSolvingBiconnected = true;
+
+  for (int i = 0; i < nrNodes; i++) {
+    criticalConnDFS(i, -1, unneeded, visited, isSolvingBiconnected, visitedEdges, biconnectedComponents);
   }
 
-  out.close();
+  return biconnectedComponents;
 }
 
 void Graph::DFSforSCC (int crtNodeIdx) {
+  // TEMP
+  vector<bool> visited;
+  static vector<int> ingressTimestamp(nrNodes);
+  static vector<int> lowestLevelReached(nrNodes);
+
   if (visited[crtNodeIdx]) {
     return;
   }
@@ -441,8 +468,8 @@ void Graph::printInTopologicalOrder () {
 
   out.close();
 
-  delete []adjList;
-  delete innerDegMap;
+  // delete []adjList;
+  // delete innerDegMap;
 }
 
 void populateMSPQueue(
@@ -815,52 +842,93 @@ void Graph::printCostOfHamiltonianPath () {
 
 // ===============================================================================================================
 
-// 1) Problem: https://infoarena.ro/problema/dfs
-    // Tests: https://infoarena.ro/job_detail/2784008
-void solveNrOfConnectedComponents() {
-  fstream in("dfs.in");
-  int N, M;
+Graph getPopulatedGraphFromFileName (const char* INPUT_FILE_NAME, bool hasSourceNode = false, bool shouldMakeDirected = false) {
+  ifstream in(INPUT_FILE_NAME);
 
-  in >> N >> M;
-  Graph g(N);
+  int nrNodes, nrEdges;
+  in >> nrNodes >> nrEdges;
 
-  int x, y;
-  for (int i = 0; i < M; i++) {
-    in >> x >> y;
-    g.addEdge(x, y);
+  Graph g(nrNodes);
+
+  if (hasSourceNode) {
+    int sourceNodeIdx;
+    in >> sourceNodeIdx;
+    sourceNodeIdx--;
+
+    g.setSourceNodeIdx(sourceNodeIdx);
   }
-  
-  ofstream out("dfs.out");
-  out << g.getNrOfConnectedComponents();
+
+  if (shouldMakeDirected) {
+    g.setUndirected(false);
+  }
+
+  int node1, node2;
+  for (int i = 0; i < nrEdges; i++) {
+    in >> node1 >> node2;
+    node1--;
+    node2--;
+
+    g.addEdge(node1, node2);
+  }
 
   in.close();
+
+  return g;
+}
+
+// 1) Problem: https://infoarena.ro/problema/dfs
+// Tests: https://infoarena.ro/job_detail/2784008
+void solveNrOfConnectedComponents() {
+  const char* INPUT_FILE_NAME = "dfs.in";
+  const char* OUTPUT_FILE_NAME = "dfs.out";
+  // fstream in("dfs.in");
+  // int N, M;
+
+  // in >> N >> M;
+  // Graph g(N);
+
+  // int x, y;
+  // for (int i = 0; i < M; i++) {
+  //   in >> x >> y;
+  //   g.addEdge(x, y);
+  // }
+  auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, -1);
+
+  ofstream out(OUTPUT_FILE_NAME);
+  out << g.getNrOfConnectedComponents();
+
   out.close();
 }
 
 // 2) Problem: https://infoarena.ro/problema/bfs
 // Tests: https://infoarena.ro/job_detail/2784104
 void solveMinEdgesRequiredFromSource () {
-  int N, M, S;
+  const char* INPUT_FILE_NAME = "bfs.in";
+  const char* OUTPUT_FILE_NAME = "bfs.out";
 
-  ifstream in("bfs.in");
-  in >> N >> M >> S;
+  // int N, M, S;
+
+  // ifstream in("bfs.in");
+  // in >> N >> M >> S;
   
-  Graph g(N);
-  g.setUndirected(false);
+  // Graph g(N);
+  // g.setUndirected(false);
 
-  int x, y;
-  for (int i = 1; i <= M; i++) {
-    in >> x >> y;
-    g.addEdge(x, y);
-  }
+  // int x, y;
+  // for (int i = 1; i <= M; i++) {
+  //   in >> x >> y;
+  //   g.addEdge(x, y);
+  // }
+
+  auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, true, true);
 
   ofstream out("bfs.out");
-  int* pathCosts = g.showMinEdgesRequiredFromSource(S);
-  for (int i = 1; i <= N; i++) {
+  auto pathCosts = g.showMinEdgesRequiredFromSource();
+  for (int i = 0, nrNodes = g.getNrNodes(); i < nrNodes; i++) {
     out << pathCosts[i] << ' ';
   }
 
-  in.close();
+  // in.close();
   out.close();
 }
 
@@ -903,28 +971,45 @@ void solveCriticalConnections () {
   }
 }
 
-// ? 3) Problem: https://infoarena.ro/problema/biconex
-// ? Tests: https://infoarena.ro/job_detail/2787336
+// 3) Problem: https://infoarena.ro/problema/biconex
+// Tests: https://infoarena.ro/job_detail/2787336
 void solveBiconnectedComponents () {
-  ifstream in("biconex.in");
-  int N, M;
+  const char* INPUT_FILE_NAME = "biconex.in";
+  const char* OUTPUT_FILE_NAME = "biconex.out";
+  
+  // ifstream in("biconex.in");
+  // int N, M;
 
-  in >> N >> M;
-  Graph g(N);
-  g.setIsSolvingBiconnected(true);
+  // in >> N >> M;
+  // Graph g(N);
 
-  int x, y;
-  for (int i = 0; i < M; i++) {
-    in >> x >> y;
-    g.addEdge(x - 1, y - 1);
+  // int x, y;
+  // for (int i = 0; i < M; i++) {
+  //   in >> x >> y;
+  //   g.addEdge(x - 1, y - 1);
+  // }
+
+  // in.close();
+
+  auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME);
+
+  // vector<vector<int>> unneeded;
+  // g.criticalConnections(g.getNrNodes(), unneeded, true);
+
+  // g.printBiconnectedComponents();
+  auto biconnectedComponents = g.getBiconnectedComponents();
+  ofstream out(OUTPUT_FILE_NAME);
+
+  out << biconnectedComponents.size() << '\n';
+
+  for (auto bComp : biconnectedComponents) {
+    for (auto node : bComp) {
+      out << node + 1 << ' ';
+    }
+    out << '\n';
   }
 
-  in.close();
-
-  vector<vector<int>> unneeded;
-  g.criticalConnections(N, unneeded);
-
-  g.printBiconnectedComponents();
+  out.close();
 }
 
 // 4) Problem: https://infoarena.ro/problema/ctc
@@ -1192,7 +1277,7 @@ int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
   // solveCriticalConnections();
-  // solveBiconnectedComponents();
+  solveBiconnectedComponents();
   // solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
   // solveTopologicalSort();
@@ -1205,7 +1290,7 @@ int main () {
   // solveGraphDiameter();
 
   // solveEulerianPath();
-  solveCostOfHamiltonianPath();
+  // solveCostOfHamiltonianPath();
 
   return 0;
 }
