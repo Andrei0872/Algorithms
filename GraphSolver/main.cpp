@@ -78,7 +78,7 @@ class Graph {
     static void printCostOfHamiltonianPath();
 
     pair<int, vector<Edge>> getMSPAndTotalCost(vector<vector<pair<int, int>>> &, const int &);
-    vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
+    vector<int> getShortestPathsWithDijkstra(vector<vector<pair<int, int>>> &, const int&);
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
     void BFS (const vector<vector<int>>&, const int&, vector<bool>&, vector<int>&, int&);
@@ -558,7 +558,7 @@ pair<int, vector<Edge>> Graph::getMSPAndTotalCost (vector<vector<pair<int, int>>
   return make_pair(totalCost, result);
 }
 
-vector<int> Graph::getShortestPathsWithDijkstra(list<pair<int, int>>*& adjList, const int& s = 0) {
+vector<int> Graph::getShortestPathsWithDijkstra(vector<vector<pair<int, int>>>& adjList, const int& s = 0) {
   vector<int> shortestPaths(nrNodes, INT_MAX);
   vector<bool> visited(nrNodes, false);
   // (destinationNodeIdx, cost) pairs.
@@ -1192,7 +1192,8 @@ void solveDijkstra () {
   in >> N >> M;
   
   Graph g(N);
-  list<pair<int, int>>* adjList = new list<pair<int, int>>[N];
+  vector<vector<pair<int, int>>> adjList;
+  adjList.resize(N);
 
   g.setUndirected(false);
 
@@ -1326,8 +1327,8 @@ int main () {
   // solveHavelHakimiProblem();
   // solveTopologicalSort();
 
-  solveMSP();
-  // solveDijkstra();
+  // solveMSP();
+  solveDijkstra();
 
   // solveRoyFloyd();
   
