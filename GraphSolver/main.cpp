@@ -81,11 +81,13 @@ class Graph {
     vector<int> getShortestPathsWithDijkstra(vector<vector<pair<int, int>>> &, const int&);
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
-    void BFS (const vector<vector<int>>&, const int&, vector<bool>&, vector<int>&, int&);
+    void BFS (const int&, vector<bool>&, vector<int>&, int&);
 
     vector<deque<int>> getBiconnectedComponents();
     
     vector<vector<int>> getSCCs();
+
+    int getGraphDiameter();
 
     void setSourceNodeIdx (int& newSourceNodeIdx) {
       sourceNodeIdx = newSourceNodeIdx;
@@ -627,7 +629,6 @@ vector<vector<int>> Graph::getAllPairsShortestPaths (vector<vector<int>> mat, co
 }
 
 void Graph::BFS (
-  const vector<vector<int>>& adjList,
   const int& startNodeIdx,
   vector<bool>& visited,
   vector<int>& processedTimestamp,
@@ -654,6 +655,27 @@ void Graph::BFS (
       lastProcessedNodeIdx = childNodeIdx;
     }
   }
+}
+
+int Graph:: getGraphDiameter () {
+  vector<bool> visited;
+  visited.resize(nrNodes);
+
+  vector<int> processTimestamp;
+  processTimestamp.resize(nrNodes);
+
+  int lastProcessedNode;
+
+  BFS(0, visited, processTimestamp, lastProcessedNode);
+
+  for (int i = 0; i < nrNodes; i++) {
+    visited[i] = false;
+  }
+
+  BFS(lastProcessedNode, visited, processTimestamp, lastProcessedNode);
+
+  const int secondBoundary = lastProcessedNode;
+  return processTimestamp.at(secondBoundary);
 }
 
 vector<int> Graph::getEulerianPath(const int& nrEdges, vector<vector<int>>& nodesAndEdges, const vector<Edge>& edges) {
@@ -866,11 +888,17 @@ void Graph::printCostOfHamiltonianPath () {
 
 // ===============================================================================================================
 
-Graph getPopulatedGraphFromFileName (const char* INPUT_FILE_NAME, bool hasSourceNode = false, bool shouldMakeDirected = false) {
+Graph getPopulatedGraphFromFileName (const char* INPUT_FILE_NAME, bool hasSourceNode = false, bool shouldMakeDirected = false, bool isNrEdgesDependentOnNodes = false) {
   ifstream in(INPUT_FILE_NAME);
 
   int nrNodes, nrEdges;
-  in >> nrNodes >> nrEdges;
+  in >> nrNodes;
+  
+  if (!isNrEdgesDependentOnNodes ) {
+    in >> nrEdges;
+  } else {
+    nrEdges = nrNodes - 1;
+  }
 
   Graph g(nrNodes);
 
@@ -1258,54 +1286,18 @@ void solveRoyFloyd () {
   }
 }
 
-// TODO: extract read fn
-// TODO: make this a `Graph`'s method
 // 11) https://infoarena.ro/problema/darb
 // Tests: https://infoarena.ro/job_detail/2811373
 void solveGraphDiameter () {
-  ifstream in("darb.in");
-  
-  int N;
-  in >> N;
-  vector<vector<int>> adjList;
+  const char* INPUT_FILE_NAME = "darb.in";
+  const char* OUTPUT_FILE_NAME = "darb.out";
 
-  vector<int> row;
-  for (int i = 0; i < N; i++) {
-    row.clear();
-    adjList.push_back(row);
-  }
+  auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, false, false, true);
 
-  int x, y;
-  for (int i = 0; i < N - 1; i++) {
-    in >> x >> y;
-    x--;
-    y--;
+  ofstream out(OUTPUT_FILE_NAME);
+  out << g.getGraphDiameter();
 
-    adjList[x].push_back(y);
-    adjList[y].push_back(x);
-  }
-
-  Graph g(N);
-  vector<bool> visited;
-  visited.resize(N);
-
-  vector<int> processTimestamp;
-  processTimestamp.resize(N);
-
-  int lastProcessedNode;
-
-  g.BFS(adjList, 0, visited, processTimestamp, lastProcessedNode);
-
-  for (int i = 0; i < N; i++) {
-    visited[i] = false;
-  }
-
-  g.BFS(adjList, lastProcessedNode, visited, processTimestamp, lastProcessedNode);
-
-  ofstream out("darb.out");
-
-  const int secondBoundary = lastProcessedNode;
-  out << processTimestamp.at(secondBoundary);
+  out.close();
 }
 
 // 12) https://infoarena.ro/problema/ciclueuler
@@ -1328,7 +1320,7 @@ int main () {
   // solveTopologicalSort();
 
   // solveMSP();
-  solveDijkstra();
+  // solveDijkstra();
 
   // solveRoyFloyd();
   
