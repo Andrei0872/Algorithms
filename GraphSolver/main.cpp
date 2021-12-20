@@ -77,7 +77,7 @@ class Graph {
     static void printEulerianPath();
     static void printCostOfHamiltonianPath();
 
-    pair<int, vector<Edge>> getMSPAndTotalCost(list<pair<int, int>>* &, const int&);
+    pair<int, vector<Edge>> getMSPAndTotalCost(vector<vector<pair<int, int>>> &, const int &);
     vector<int> getShortestPathsWithDijkstra(list<pair<int, int>>* &, const int&);
 
     static vector<vector<int>> getAllPairsShortestPaths(vector<vector<int>>, const int&);
@@ -500,7 +500,7 @@ void populateMSPQueue(
     const int &parentNodeIdx,
     priority_queue<EdgeWithCost, vector<EdgeWithCost>, MSPComparator> &edgesWithMinCost,
     vector<bool> &visited,
-    list<pair<int, int>> *&adjList
+    vector<vector<pair<int, int>>>& adjList
   )
 {
   for (auto childPair : adjList[parentNodeIdx])
@@ -518,7 +518,7 @@ void populateMSPQueue(
 
 // Using the `Prim`'s algorithm, meaning that we start from an arbitrary node and then
 // we *progressively* build the MSP by choosing the connected edge which has the minimum cost.
-pair<int, vector<Edge>> Graph::getMSPAndTotalCost (list<pair<int, int>>* & adjList, const int& s = 0) {
+pair<int, vector<Edge>> Graph::getMSPAndTotalCost (vector<vector<pair<int, int>>> & adjList, const int& s = 0) {
   // Keep track of edges and their costs. The edge with the smallest cost will be at the top.
   priority_queue<EdgeWithCost, vector<EdgeWithCost>, MSPComparator> edgesWithMinCost;
   vector<bool> visited(nrNodes, false);
@@ -1154,8 +1154,9 @@ void solveMSP () {
   in >> N >> M;
 
   Graph g(N);
-  list<pair<int, int>>* adjList = new list<pair<int, int>>[N]; 
-  
+  vector<vector<pair<int, int>>> adjList;
+  adjList.resize(N);
+
   int src, dest, cost;
   for (int i = 0; i < M; i++) {
     in >> src >> dest >> cost;
@@ -1323,9 +1324,9 @@ int main () {
   // solveBiconnectedComponents();
   // solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
-  solveTopologicalSort();
+  // solveTopologicalSort();
 
-  // solveMSP();
+  solveMSP();
   // solveDijkstra();
 
   // solveRoyFloyd();
