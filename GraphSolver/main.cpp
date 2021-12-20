@@ -452,8 +452,11 @@ void Graph::printInTopologicalOrder () {
   int N, M;
 
   in >> N >> M;
-  list<int> *adjList = new list<int>[N + 1];
-  int* innerDegMap = new int[N + 1];
+  vector<vector<int>> adjList;
+  vector<int> innerDegMap;
+
+  adjList.resize(N);
+  innerDegMap.resize(N);
 
   // Nodes with inner degree 0.
   queue<int> independentNodes;
@@ -461,18 +464,16 @@ void Graph::printInTopologicalOrder () {
   int x, y;
   for (int i = 0; i < M; i++) {
     in >> x >> y;
+    x--;
+    y--;
 
     adjList[x].push_back(y);
     innerDegMap[y]++;
   }
 
-  // for (int i = 1; i <= N; i++) {
-  //   cout << innerDegMap[i] << ' ';
-  // }
-
   in.close();
 
-  for (int i = 1; i <= N; i++) {
+  for (int i = 0; i < N; i++) {
     if (innerDegMap[i] == 0) {
       independentNodes.push(i);
     }
@@ -483,7 +484,7 @@ void Graph::printInTopologicalOrder () {
     int crtNode = independentNodes.front();
     independentNodes.pop();
 
-    out << crtNode << ' ';
+    out << crtNode + 1 << ' ';
 
     for (int childNode : adjList[crtNode]) {
       if (--innerDegMap[childNode] == 0) {
@@ -493,9 +494,6 @@ void Graph::printInTopologicalOrder () {
   }
 
   out.close();
-
-  // delete []adjList;
-  // delete innerDegMap;
 }
 
 void populateMSPQueue(
@@ -1323,9 +1321,9 @@ int main () {
   // solveMinEdgesRequiredFromSource();
   // solveCriticalConnections();
   // solveBiconnectedComponents();
-  solveStronglyConnectedComponents();
+  // solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
-  // solveTopologicalSort();
+  solveTopologicalSort();
 
   // solveMSP();
   // solveDijkstra();
