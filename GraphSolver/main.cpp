@@ -48,17 +48,19 @@ class Graph {
     // stack<pair<int, int>> visitedEdges;
     // vector<deque<int>> biconnectedComponents;
 
-    bool* isInStack;
-    stack<int> visitedNodes;
-    vector<vector<int>> SCCs;
+    // bool* isInStack;
+    // stack<int> visitedNodes;
+    // vector<vector<int>> SCCs;
 
     void DFS(int, int, bool&, vector<bool>&);
     void buildAdjList(vector<vector<int>>&);
     void criticalConnDFS(int, int, vector<vector<int>>&, vector<bool>&, bool&, stack<pair<int, int>>&, vector<deque<int>>&);
 
-    void extractSCCFromStack(int);
+    void extractSCCFromStack(int, stack<int>&, vector<bool>&, vector<vector<int>>&);
 
     vector<int> getEulerianPath (const int&, vector<vector<int>>&, const vector<Edge>&);
+
+    void DFSforSCC(int, vector<bool>&, vector<bool>&, stack<int>&, vector<vector<int>>&);
   public:
     Graph(int);
     ~Graph();
@@ -69,8 +71,8 @@ class Graph {
     vector<int> showMinEdgesRequiredFromSource();
     vector<vector<int>> criticalConnections(int, vector<vector<int>>&, bool);
 
-    void DFSforSCC(int);
-    void printSCCs();
+    // void DFSforSCC(int, vector<bool>&, vector<bool>&, stack<int>&, vector<vector<int>>&);
+    // void printSCCs();
     static void printInTopologicalOrder();
     static void printEulerianPath();
     static void printCostOfHamiltonianPath();
@@ -82,6 +84,8 @@ class Graph {
     void BFS (const vector<vector<int>>&, const int&, vector<bool>&, vector<int>&, int&);
 
     vector<deque<int>> getBiconnectedComponents();
+    
+    vector<vector<int>> getSCCs();
 
     void setSourceNodeIdx (int& newSourceNodeIdx) {
       sourceNodeIdx = newSourceNodeIdx;
@@ -347,9 +351,26 @@ vector<deque<int>> Graph::getBiconnectedComponents () {
   return biconnectedComponents;
 }
 
-void Graph::DFSforSCC (int crtNodeIdx) {
-  // TEMP
-  vector<bool> visited;
+vector<vector<int>> Graph::getSCCs () {
+  vector<bool> visited(nrNodes);
+  vector<bool> isInStack(nrNodes);
+  stack<int> visitedNodes;
+  vector<vector<int>> SCCs;
+
+  for (int i = 0; i < nrNodes; i++) {
+    DFSforSCC(i, visited, isInStack, visitedNodes, SCCs);
+  }
+
+  return SCCs;
+}
+
+void Graph::DFSforSCC (
+  int crtNodeIdx,
+  vector<bool>& visited,
+  vector<bool>& isInStack,
+  stack<int>& visitedNodes,
+  vector<vector<int>>& SCCs
+) {
   static vector<int> ingressTimestamp(nrNodes);
   static vector<int> lowestLevelReached(nrNodes);
 
@@ -375,7 +396,7 @@ void Graph::DFSforSCC (int crtNodeIdx) {
     // if a cycle is encountered, the already visited node will have a **smaller** `ingressTimestamp`.
     // We will form a SCC by grouping having all its constituent the same `ingressTimestamp`.
     if (!visited[childNodeIdx]) {
-      DFSforSCC(childNodeIdx);
+      DFSforSCC(childNodeIdx, visited, isInStack, visitedNodes, SCCs);
     }
 
     // If the child is still in stack it means that it is not yet part
@@ -387,11 +408,16 @@ void Graph::DFSforSCC (int crtNodeIdx) {
 
   bool isStartOfSCC = lowestLevelReached[crtNodeIdx] == ingressTimestamp[crtNodeIdx];
   if (isStartOfSCC) {
-    extractSCCFromStack(crtNodeIdx);
+    extractSCCFromStack(crtNodeIdx, visitedNodes, isInStack, SCCs);
   }
 }
 
-void Graph::extractSCCFromStack (int startNodeIdx) {
+void Graph::extractSCCFromStack (
+  int startNodeIdx,
+  stack<int>& visitedNodes,
+  vector<bool>& isInStack,
+  vector<vector<int>>& SCCs
+) {
   vector<int> SCC;
 
   int stackNodeIdx;
@@ -406,20 +432,20 @@ void Graph::extractSCCFromStack (int startNodeIdx) {
   SCCs.push_back(SCC);
 }
 
-void Graph::printSCCs () {
-  ofstream out("ctc.out");
+// void Graph::printSCCs () {
+//   ofstream out("ctc.out");
   
-  out << SCCs.size() << '\n';
+//   out << SCCs.size() << '\n';
 
-  for (auto SCC : SCCs) {
-    for (auto v : SCC) {
-      out << v << ' ';
-    }
-    out << '\n';
-  }
+//   for (auto SCC : SCCs) {
+//     for (auto v : SCC) {
+//       out << v << ' ';
+//     }
+//     out << '\n';
+//   }
 
-  out.close();
-}
+//   out.close();
+// }
 
 void Graph::printInTopologicalOrder () {
   ifstream in("sortaret.in");
@@ -1015,26 +1041,45 @@ void solveBiconnectedComponents () {
 // 4) Problem: https://infoarena.ro/problema/ctc
 // Tests: https://infoarena.ro/job_detail/2787477
 void solveStronglyConnectedComponents () {
-  ifstream in("ctc.in");
-  int N, M;
+  const char* INPUT_FILE_NAME = "ctc.in";
+  const char* OUTPUT_FILE_NAME = "ctc.out";
   
-  in >> N >> M;
-  Graph g(N);
-  g.setUndirected(false);
+  // ifstream in("ctc.in");
+  // int N, M;
+  
+  // in >> N >> M;
+  // Graph g(N);
+  // g.setUndirected(false);
 
-  int x, y;
-  for (int i = 0; i < M; i++) {
-    in >> x >> y;
-    g.addEdge(x, y);
+  // int x, y;
+  // for (int i = 0; i < M; i++) {
+  //   in >> x >> y;
+  //   g.addEdge(x, y);
+  // }
+
+  // in.close();
+  
+  // for (int i = 1; i <= N; i++) {
+  //   g.DFSforSCC(i);
+  // }
+  
+  // g.printSCCs();
+
+  auto g = getPopulatedGraphFromFileName(INPUT_FILE_NAME, false, true);
+
+  ofstream out("ctc.out");
+  
+  auto SCCs = g.getSCCs();
+  out << SCCs.size() << '\n';
+
+  for (auto SCC : SCCs) {
+    for (auto v : SCC) {
+      out << v + 1 << ' ';
+    }
+    out << '\n';
   }
 
-  in.close();
-  
-  for (int i = 1; i <= N; i++) {
-    g.DFSforSCC(i);
-  }
-  
-  g.printSCCs();
+  out.close();
 }
 
 // 5) Problem: Havel-Hakimi algorithm
@@ -1277,8 +1322,8 @@ int main () {
   // solveNrOfConnectedComponents();
   // solveMinEdgesRequiredFromSource();
   // solveCriticalConnections();
-  solveBiconnectedComponents();
-  // solveStronglyConnectedComponents();
+  // solveBiconnectedComponents();
+  solveStronglyConnectedComponents();
   // solveHavelHakimiProblem();
   // solveTopologicalSort();
 
